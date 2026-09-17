@@ -86,6 +86,13 @@ a.btn.prim, button.btn.prim {
   background: var(--accent); color: var(--accent-tekst); border-color: var(--accent);
 }
 button.btn.icoon { padding: .45rem .6rem; min-width: 34px; }
+a.btn.rij, button.btn.rij {
+  padding: .2rem .55rem; font-size: 12.5px; border-radius: 6px;
+  border-color: transparent; background: transparent; color: var(--accent);
+}
+a.btn.rij:hover, button.btn.rij:hover {
+  background: var(--vlak-rustig); border-color: var(--rand);
+}
 
 /* ---------------------------------------------------------- dashboard --- */
 

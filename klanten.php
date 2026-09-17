@@ -203,7 +203,7 @@ const tabelKlanten = new Tabulator('#tabel-klanten', {
     { title: 'Langst te laat', field: 'oudste', hozAlign: 'right', width: 140,
       formatter: c => c.getValue() === null ? '—' : c.getValue() + ' d' },
     { title: '', field: 'contactid', width: 90, hozAlign: 'center', headerSort: false,
-      formatter: () => '<a class="btn">Details</a>',
+      formatter: () => '<a class="btn rij">Details</a>',
       cellClick: (e, cell) => klantDetailLink(cell.getRow().getData(), true) }
   ]
 });
