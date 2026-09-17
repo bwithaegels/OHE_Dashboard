@@ -258,6 +258,9 @@ tr.boekingen td:first-child { position: static; }
   background: var(--vlak); border: 1px solid var(--rand); border-radius: 12px;
   font-size: 13px; color: var(--tekst);
 }
+.tabulator .tabulator-tableholder .tabulator-table {
+  background-color: var(--vlak); color: var(--tekst);
+}
 .tabulator .tabulator-header {
   background: var(--vlak); border-bottom: 1px solid var(--rand-sterk);
   color: var(--tekst-zacht);
