@@ -11,6 +11,29 @@ Not Exzellence. Tessa runs two things; this project is the hockey one. If a requ
 mentions clinic treatments, mesoestetic, or Instagram, it is the other side of her work
 and this skill does not apply.
 
+## Working via GitHub
+
+Two private repos, split by app: **`OHE_Dashboard`** (this one — dashboard + P&L, matches
+this skill) and **`OHE_Closing`** (a separate month-end closing checklist app, shares the
+same Yuki key/administration but is a different tool with its own `check.php`/`todo.php`/
+`checks/`). Don't conflate the two when a request mentions "the closing tool" — this skill
+covers the dashboard only.
+
+No live sync exists between this repo and a Claude session — each conversation starts
+with an empty container. The working pattern:
+
+1. User pastes a fine-grained PAT (read/contents scope, sometimes write) + repo name(s) at
+   the start of a session.
+2. Claude `git clone`s fresh into the container and reads only the files relevant to the
+   task at hand, not the whole repo by default.
+3. The token is used only for that session's clone/push — never written to a project file,
+   memory, or anything that persists past the conversation. User re-pastes it next time.
+4. Neither repo ships a `.gitignore`; `cache/` (session IDs, balance/debtor JSON) and
+   `config.php` are committed as-is. Not currently treated as a live secret leak since
+   `config.php`'s `yuki_api_key` is left blank in the repo and the committed password is a
+   placeholder — but if a real key or password is ever put in `config.php` for testing,
+   it must be scrubbed from history before pushing, not just removed in a later commit.
+
 ## What it is
 
 Two surfaces on one app:
@@ -286,6 +309,187 @@ Format:
 ### YYYY-MM-DD — short title
 What we expected. What actually happened. What to do instead.
 ```
+
+### 2026-09-17 — GitHub access workflow established
+User wants to stop re-pasting files every session for `OHE_Dashboard` and `OHE_Closing`.
+No GitHub MCP connector exists in the directory (checked, none found), so there's no
+persistent auto-sync into Claude's memory or project files. Landed on: user pastes a
+fine-grained PAT scoped to just these two repos at the start of a session, Claude clones
+into the container and reads what's relevant, token is never stored anywhere persistent.
+First clone attempt failed with `Write access to repository not granted` on a plain
+`git clone` (read-only operation) — retrying the identical command with the same token
+succeeded. Root cause not fully confirmed, but it reads like the token's fine-grained
+permissions hadn't finished propagating on GitHub's side yet right after creation/edit —
+worth waiting a minute and retrying before concluding the scopes are wrong.
+Confirmed while doing this: neither repo has a `.gitignore`, so `cache/` and `config.php`
+are committed. The committed `OHE_Closing/config.php` password and administration ID are
+not live secrets (password is a placeholder; admin ID alone is useless without the API
+key, which is blank in the file) — so no rotation needed this time, but the pattern is
+worth a `.gitignore` before anything real ever lands in a committed `config.php`.
+
+### 2026-09-16 — average payment term + per-invoice currency: OutstandingDebtorItems has no currency field, "Bedrag VV" comes from a different call entirely
+Bjorge asked for a KPI gauge (average payment term) on `klant.php`, plus a redesign
+replacing the expandable payment list with a flat outstanding-invoices table showing
+currency, original amount, outstanding amount and days overdue per invoice.
+
+Currency turned out not to exist where expected. `OutstandingDebtorItems` — the only
+source `klant.php` had for open invoices — was checked field-by-field against 1,676 real
+records (via `probe_velden.php`, including US and Chinese customers who obviously invoice
+in non-EUR) and confirmed to carry no currency field whatsoever: `Date, Description,
+Contact, ContactID, OpenAmount, OriginalAmount, Type, Reference, DueDate, DocumentID,
+PaymentMethod`, plus address/VAT/email fields, full stop. `OriginalAmount` is always in
+EUR (base currency) — useful, but not what Bjorge meant.
+
+Bjorge named the missing concept directly: "Bedrag VV" (Bedrag Vreemde Valuta / Amount
+Foreign Currency), a real field visible in Yuki's own invoice-table UI. Probed via
+`probe_valuta.php` and confirmed it lives on `GetTransactions` (AccountingInfo service),
+as a `ForeignCurrency` sub-struct (`amountFC`, `rate`, `currency`) only populated when
+`dataGroups` includes `"ForeignCurrency"`. Confirmed genuine and per-invoice, not a
+constant, from live data: Osaka Hockey Americas has EUR- and USD-currency invoices
+interleaved on the same account.
+
+Consequence: currency/Bedrag VV is only knowable for invoices whose transaction line
+falls inside whatever date window is being queried — `OutstandingDebtorItems` can never
+supply it. So `betalingenPerKlant()` was switched from `GLAccountTransactions` (no
+foreign-currency data) to `GetTransactions` with `dataGroups: 'Contact,ForeignCurrency'`
+(same "1 call per account per window" cost), now surfacing `contact.id`/`contact.fullName`
+and `foreignCurrency.{currency,amountFC}` per line, plus a new `facturen_info` key
+(`datum`, `bedrag`, `valuta`, `bedrag_vv` per invoice reference) and a weighted-average
+`gem_termijn` (days between invoice date and matched payment date, weighted by amount,
+matched pairs only, non-positive amounts/negative day-counts skipped).
+
+`klant.php`'s outstanding-invoices table shows the real `bedrag_vv` when currency is known
+and non-EUR, falls back to `OutstandingDebtorItems`'s EUR `OriginalAmount` otherwise, and
+shows an honest "—" (not a guessed "EUR") when no `facturen_info` entry exists because the
+invoice falls outside the lookback window — disclosed on-page via a `.melding` note, not a
+bug. Added `betaaltermijn_groen`/`betaaltermijn_rood` config keys (30/60 day thresholds,
+same "reasonable assumption, override in config.php" pattern as existing thresholds).
+
+Old code removed, not superseded: the `<details>`-based payment list and its
+`nog_open`/`echtOpen` cross-reference are gone from `klant.php` — replaced, not
+supplemented. `koppelBetalingen()` itself is unchanged, just no longer rendered as a list.
+
+Recurring gotcha hit again: `array_keys()` on an invoice-number-keyed array returns ints,
+and `str_ends_with()` threw a TypeError until cast back with `(string)` — same trap as
+GL codes, documented below.
+
+Still to clean up: `probe_velden.php`/`probe_valuta.php` are read-only diagnostics, not
+meant to stay on the live server, same as the probe scripts below.
+
+### 2026-09-16 — chased Yuki's "yellow highlight" match for a full afternoon: it isn't in the public API
+Bjorge noticed Yuki's own UI highlights the matched invoice in yellow when clicking a
+payment line, and assumed a real relational field must be behind it. Five rounds of
+read-only probing (WSDL introspection first, then real calls) ran this to ground:
+
+- `GetTransactionDetails` exists — on **AccountingInfo**, not Accounting as first assumed
+  — needs an extra undocumented `financialMode` int (`0` works), but `documentReference`
+  is either the invoice's own number restated or empty on payment lines. Dead end.
+- `GetTransactions` (AccountingInfo) has `document`/`documentProcessed`/`documentMatched`
+  sub-objects, but they're only populated via an undocumented `dataGroups` string param —
+  absent from the object entirely otherwise, not null. `numberOfRecords: 50000` returned
+  a full 41,788-row account window in one 4.3s call, so paging isn't mandatory; same
+  "1 call per account per window" cost as `GLAccountTransactions`.
+- `documentMatched` came back empty on every row tested (every invoice, payment, and the
+  −€0.01 correction) — zero usable signal, tested exhaustively rather than assumed.
+- `document` looked promising and isn't: for a payment line it identifies the **imported
+  bank statement batch**, not the settled invoice — proven by four unrelated invoices
+  sharing one `document.id` because they were imported in the same bank statement. Using
+  it as a match key would wrongly link unrelated invoices paid on the same statement day.
+  The one case where invoice and payment shared a `document.id` was a B2C webshop order,
+  most likely because that integration marks the invoice itself paid rather than
+  importing a separate line — a tempting false positive if generalised.
+- Conclusion: the public Yuki SOAP API does not expose whatever drives that yellow
+  highlight; it's most plausibly computed inside Yuki's own web app. Told Bjorge this
+  plainly rather than continuing past the point of diminishing returns.
+- No code change resulted — the existing best-effort `koppelBetalingen()` matcher was
+  re-tested against fresh real B2B multi-invoice examples surfaced during this chase and
+  matched correctly on the first try, now with stronger evidence behind the same design.
+- If this comes up again: don't re-probe `GetTransactions`/`documentMatched` from
+  scratch — read this entry first. Unexplored: a non-SOAP Yuki REST API, if one exists.
+
+### 2026-09-16 — customer payment drill-down: shipped, matching is best-effort by design
+Built `klant.php?id=<contactID>` — bank payments per customer, expandable to the invoices
+each one settled. `OutstandingDebtorItems` only covers still-open items with no payment
+history, so this needed different operations, confirmed via two read-only probe scripts:
+
+- `GLAccountTransactions` already returns `Contact`/`ContactID` per line for 400000/404000/
+  407000 with no separate call, but has no per-contact filter — isolating one customer
+  means fetching the whole account for the window and filtering client-side.
+- Account 400000 had 41,776 transactions in a 3.5-month window, almost all under one
+  aggregate "B2C sales - België" pseudo-contact (every Shopify order lands there) — this
+  drill-down is only meaningful for real (non-B2C) customers, consistent with hiding B2C
+  by default in `klanten.php`.
+- Three real description shapes, all handled by one matcher (`koppelBetalingen()`):
+  B2C bracket references, B2B single-invoice SEPA narratives, and B2B multi-invoice
+  payments with several invoice numbers comma/hyphen-separated in one description. The
+  matcher extracts every `\d{4,}` run from a description and links it to any open invoice
+  whose number equals or ends with that run — covers all shapes without detecting which
+  shape it is. A stray rounding-correction line attaches to the same invoice as the main
+  payment because matching isn't exclusive.
+- Non-invoice adjustment lines correctly produce no match rather than a false one (e.g. a
+  same-account credit-note-style sales document that looked like an unmatched payment but
+  wasn't a payment at all) — "geen koppeling gevonden" with the raw description shown is
+  the correct, honest outcome either way.
+- This is a best-effort text match, not guaranteed reconciliation, and is documented as
+  such on the page itself: every payment always shows its full raw bank description next
+  to whatever it matched, so a wrong or missing match is checkable by eye.
+
+Recurring gotcha: `array_keys()` on an invoice-number-keyed array returns ints;
+`str_ends_with()` threw a TypeError until cast back to `(string)` at point of use.
+
+`stijl.css`: added `.betalingen`/`.betaling`/`.betaling-detail` rules for the `<details>`-
+based expandable list (deliberately not Tabulator, given the lifecycle bugs below) and
+`.tabel-eenvoudig`, overriding its inherited `position: sticky` from the P&L table rules —
+without a scrolling ancestor a sticky header there would float loose on scroll. Checked
+against real `stijl.css` in both themes via headless-Chromium screenshot before delivery.
+
+### 2026-09-16 — klanten.php "Details" button did nothing: stale cache, not a code bug
+Bjorge reported the new "Details" link did nothing after it shipped. Root cause:
+`openstaandeDebiteuren()` caches its whole result for an hour; the cache in place was
+written by the *previous* version of `yuki.php`, before `contactid` was added to each row,
+so every cached row was missing that field. `klantDetailUrl()` correctly returned `null`
+for a missing `contactid` and the click handler correctly did nothing — code was right,
+silently stale data made it look broken. `?ververs=1` fixed it immediately.
+
+General lesson: any time a cached shape gains a new field, an in-flight cache written by
+the old code silently lacks it until the TTL expires or a forced refresh happens — same
+class of bug as the mapping/GL-account cache elsewhere in this app, and will keep
+recurring whenever a cache's *shape*, not just its data, changes. Hardened
+`klantDetailLink()` to fail loudly (an `alert()` pointing at "Ververs") instead of doing
+nothing silently, and the Details column now renders a plain `—` instead of a button when
+`contactid` is absent, so a stale-cache row looks visibly different rather than a button
+that looks live but isn't. Worth a small cache-schema version stamp (`'_v' => 2` checked
+on read) next time this bites, instead of relying on someone remembering to hit Ververs.
+
+### 2026-09-16 — filtering klanten.php crashed, then silently did nothing, because of Tabulator's build timing
+Added a customer picker and B2C/groep hide-toggles to `klanten.php`. Two rounds of bugs,
+same root cause: touching a Tabulator instance before it has finished building.
+
+Round 1 — crash: calling `.setFilter()`/`.redraw()` right after `new Tabulator(...)`, in
+the same synchronous block, threw `Cannot read properties of null (reading 'offsetWidth')`
+— fatal, killed the rest of the `<script>` block, so every button and the search box
+stopped responding. Hit hardest on `#tabel-posten`, which starts `display:none`:
+`layout: 'fitColumns'` tried to measure column widths on a container with no rendered box.
+
+Round 2 — silently inert: fixed round 1 by passing `tableBuilt: fn` as a table option in
+the constructor config, gating every table-touching call behind a ready counter. No more
+crash — but the filters, dropdown and buttons did nothing at all, ever. Cause: in this
+Tabulator build, a `tableBuilt` key inside the options object is silently ignored — no
+error, the callback is simply never invoked, so the ready gate never opened.
+
+Fix that worked: bind the event explicitly with `.on('tableBuilt', fn)` immediately after
+the constructor call (the documented Event System API), not via an options-object key.
+Also added a ~3s `setTimeout` fallback that force-starts filtering and logs a console
+warning if `tableBuilt` still hasn't fired, so a wrong event-name assumption degrades to
+"works after a short delay, with a warning" instead of "silently broken forever."
+
+Takeaway: don't trust an options-object callback key for Tabulator lifecycle events
+without checking this specific build's actual behaviour — bind via `.on()` instead, and
+always pair a "wait for readiness" gate with a timeout escape hatch. `pnl.php` only calls
+`setFilter` from inside a user-triggered input listener, which is safe by the time a human
+can actually type — but any code that calls table methods automatically at page load
+needs this guard. Worth checking `index.php` too if it ever gets an immediate
+`.redraw()`/`.setFilter()` call on page load.
 
 ### 2026-09-11 — the CSS was right, the browser was wrong
 The gauge rendered as a needle on a blank field: no coloured arcs, text far too large, SVG
