@@ -310,6 +310,32 @@ Format:
 What we expected. What actually happened. What to do instead.
 ```
 
+### 2026-09-17 — dark-mode row hover made text vanish: text was never themed at all
+Bjorge reported that hovering a row in `klanten.php`'s customer table turned the
+background dark but the text also "stayed dark" — poor contrast, dark mode only.
+Assumption going in was a bad hover-background choice; actual cause was upstream of
+hover entirely, found by checking computed styles in a real reproduction rather than
+guessing: Tabulator's own shipped CSS sets
+`.tabulator .tabulator-tableholder .tabulator-table { color: #333; background-color: #fff; }`
+— three chained classes, specificity (0,3,0) — which beats our `.tabulator { color:
+var(--tekst); }` override (0,1,0) regardless of load order. **Every cell's text has
+always rendered as a hardcoded `#333`, in both themes, hover or not** — light mode never
+showed it because `#333` on a near-white background still has enough contrast; dark mode
+masked it too, in the *normal* row state, because `#333` sits far enough from the very
+dark row background (`--vlak`) to still read as legible. Hovering swaps the row
+background to `--vlak-rustig`, which is much closer in luminance to that same fixed
+`#333`, collapsing the contrast to near-zero.
+Fix: added `.tabulator .tabulator-tableholder .tabulator-table { background-color:
+var(--vlak); color: var(--tekst); }`, matching Tabulator's own selector so ours actually
+wins. Confirmed via computed-style inspection before and after (text color literally
+changed from `rgb(51,51,51)` to the theme's `--tekst` value) and via screenshot in both
+themes, hovered and not, rather than trusting that a smaller CSS diff was correct.
+**Lesson for any future Tabulator override**: matching or beating the *exact* selector
+Tabulator itself uses matters more than which rule "should" win — a single-class
+override reads as more specific than it is when the library's own rule chains several
+classes on the same property. When a themed value silently doesn't apply, check computed
+styles for the real winning rule before assuming the override is at fault.
+
 ### 2026-09-17 — GitHub access workflow established
 User wants to stop re-pasting files every session for `OHE_Dashboard` and `OHE_Closing`.
 No GitHub MCP connector exists in the directory (checked, none found), so there's no
