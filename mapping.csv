@@ -1,0 +1,192 @@
+gl_code;gl_naam;categorie
+603000;Algemene onderaanneming;Overige diensten en diverse goederen
+604000;Aankopen van handelsgoederen;Aankopen handelsgoederen
+604001;Aankopen van handelsgoederen - duties;Aankopen handelsgoederen
+604002;Aankopen van handelsgoederen - transportkosten;Aankopen handelsgoederen
+604003;Aankopen van handelsgoederen - Facturen;Aankopen handelsgoederen
+604004;Aankopen van Hulpstoffen;Aankopen handelsgoederen
+610000;Diensten en diverse goederen;Overige diensten en diverse goederen
+610100;Huurlasten gebouwen;Kosten gebouw
+610200;Huurlasten installaties, machines en uitrusting;Kosten kantoor
+610300;Huurlasten bedrijfswagens;Autokosten
+610301;Huurlasten personenwagens (50% BTW aftrek);Autokosten
+610302;Huurlasten personenwagens (100% BTW aftrek);Autokosten
+610303;Huurlasten leasfietsen;Autokosten
+610500;Onderhoud gebouwen;Kosten gebouw
+610700;Onderhoud en herstellingen installaties, machines en uitrusting;Kosten kantoor
+610701;Onderhoud en herstellingen kantoormachines;Kosten kantoor
+610800;Onderhoud en herstellingen bedrijfswagens;Autokosten
+610801;Onderhoud en herstellingen personenwagens;Autokosten
+611000;Bureaubenodigdheden en drukwerk;Kosten kantoor
+611100;Boeken, prospectussen en documentatie;Kosten kantoor
+611200;Klein materiaal;Kosten kantoor
+611300;Onderhoudsproducten;Kosten kantoor
+611301;Afvalverwerking;Kosten kantoor
+611500;Gas, water en elektriciteit;Kosten kantoor
+612000;Erelonen sociaal secretariaat;Overige diensten en diverse goederen
+612050;Administratieve diensten;Overige diensten en diverse goederen
+612100;Informaticaprestaties;Managementvergoedingen en erelonen
+612200;Incassokosten;Overige diensten en diverse goederen
+612300;Erelonen consultants;Managementvergoedingen en erelonen
+612301;Erelonen IT - consultants;Managementvergoedingen en erelonen
+612302;Erelonen modellen;Managementvergoedingen en erelonen
+612500;Brandstoffen bedrijfswagens;Autokosten
+612501;Brandstoffen personenwagens (100% aftrekbaar);Autokosten
+612600;Andere autokosten bedrijfswagens;Autokosten
+612601;Parkingkosten;Autokosten
+612602;Taxikosten;Reiskosten
+612603;Tolgelden;Autokosten
+612700;Verplaatsingskosten terugbetaald aan derden;Overige diensten en diverse goederen
+613000;Brandverzekering;Kosten gebouw
+613200;Verzekering tegen bedrijfsrisico’s;Overige diensten en diverse goederen
+613400;Verzekering bedrijfswagens;Autokosten
+613401;Verzekering personenwagens;Autokosten
+613500;Verzekeringen algemeen;Overige diensten en diverse goederen
+613501;Transportverzekering;Overige diensten en diverse goederen
+614000;Vervoerkosten op verkoop (algemene verrichtingen);Transportkosten en Bleckmann
+614001;Handelingskosten Bleckmann;Transportkosten en Bleckmann
+614002;Vervoerkosten Bleckmann;Transportkosten en Bleckmann
+614003;Verpakkingskosten;Transportkosten en Bleckmann
+615000;Commissielonen;Managementvergoedingen en erelonen
+615200;Erelonen boekhouders en accountants;Managementvergoedingen en erelonen
+615300;Overige erelonen;Managementvergoedingen en erelonen
+615301;Managementvergoedingen;Managementvergoedingen en erelonen
+615302;Beheerskosten sociaal secretariaat;Overige diensten en diverse goederen
+615700;Erelonen notarissen en advocaten;Managementvergoedingen en erelonen
+616000;Vergoedingen medewerkers;Bezoldigingen, RSZ & Pensioenen
+616100;Portkosten;Overige diensten en diverse goederen
+616200;Telefoon- en Internetkosten;Kosten kantoor
+616450;Publiciteit en aankondigingen;Kosten publiciteit
+616451;Online marketing;Kosten publiciteit
+616452;Contributie clubs;Kosten publiciteit
+616453;Contributie spelers;Kosten publiciteit
+616454;Samples;Overige diensten en diverse goederen
+616500;Onthaalkosten en relatiegeschenken;Kosten publiciteit
+616530;Congressen en seminars;Bezoldigingen, RSZ & Pensioenen
+616540;Opleidingskosten;Bezoldigingen, RSZ & Pensioenen
+616610;Marketing materialen;Kosten publiciteit
+616620;Beurzen en tentoonstellingen;Overige diensten en diverse goederen
+616640;Kosten reclamebureau;Kosten publiciteit
+616650;Contributies en abonnementen;Kosten kantoor
+616660;Aftrekbare giften;Overige diensten en diverse goederen
+616680;Restaurantkosten;Reiskosten
+616700;Reis- en verblijfkosten binnenland;Reiskosten
+616750;Reis- en verblijfkosten buitenland;Reiskosten
+616800;Niet-specifieke beroepskledij;Overige diensten en diverse goederen
+616900;Overige verkoopkosten;Overige diensten en diverse goederen
+616901;Gift cards - shopify;Overige diensten en diverse goederen
+616902;Doorrekening kosten;Doorrekeningen
+616903;Affiliates;Kosten publiciteit
+617000;Uitzendkrachten;Bezoldigingen, RSZ & Pensioenen
+617200;Personen ter beschikking gesteld van de onderneming;Bezoldigingen, RSZ & Pensioenen
+618000;Bedrijfsleiderbezoldigingen;Managementvergoedingen en erelonen
+620000;Bestuurders of zaakvoerders;Bezoldigingen, RSZ & Pensioenen
+620200;Bezoldigingen bedienden;Bezoldigingen, RSZ & Pensioenen
+620201;Maaltijdcheques;Bezoldigingen, RSZ & Pensioenen
+620202;Ecocheques;Bezoldigingen, RSZ & Pensioenen
+621000;Werkgeversbijdragen voor sociale verzekeringen;Bezoldigingen, RSZ & Pensioenen
+622000;Kantinekosten;Bezoldigingen, RSZ & Pensioenen
+623000;Overige personeelskosten;Bezoldigingen, RSZ & Pensioenen
+623001;Hospitalisatieverzekering;Bezoldigingen, RSZ & Pensioenen
+623002;Kosten eigen aan de werkgever;Bezoldigingen, RSZ & Pensioenen
+623003;Sociaal abonnement;Bezoldigingen, RSZ & Pensioenen
+623004;Arbeidsongevallen verzekering;Bezoldigingen, RSZ & Pensioenen
+623005;Medische kosten;Bezoldigingen, RSZ & Pensioenen
+623006;Diverse personeelskosten;Bezoldigingen, RSZ & Pensioenen
+623400;Personeelsfeest;Bezoldigingen, RSZ & Pensioenen
+623800;Voorzieningen vakantiegeld en premies;Bezoldigingen, RSZ & Pensioenen
+624000;Pensioenen;Bezoldigingen, RSZ & Pensioenen
+624001;Groepsverzekering;Bezoldigingen, RSZ & Pensioenen
+630000;Afschrijvingskosten oprichtingskosten;Afschrijvingen
+630010;Afschrijvingskosten uitgifte van aandelen;Afschrijvingen
+630100;Afschrijvingskosten onderzoek en ontwikkeling;Afschrijvingen
+630110;Afschrijvingskosten concessies, vergunningen en intellectuele eigendom;Afschrijvingen
+630120;Afschrijvingskosten goodwill;Afschrijvingen
+630130;Afschrijvingskosten software licenties;Afschrijvingen
+630200;Afschrijvingskosten gebouwen;Afschrijvingen
+630210;Afschrijvingskosten verbouwingen;Afschrijvingen
+630220;Afschrijvingskosten machines, installaties en uitrusting;Afschrijvingen
+630230;Afschrijvingskosten meubilair;Afschrijvingen
+630240;Afschrijvingskosten kantoormachines;Afschrijvingen
+630250;Afschrijvingskosten software;Afschrijvingen
+630260;Afschrijvingskosten bedrijfswagens;Afschrijvingen
+630261;Afschrijvingen personenwagens;Afschrijvingen
+630262;Afschrijvingen bedrijfswagens;Afschrijvingen
+630300;Afschrijvingskosten niet aan de bedrijfsuitvoering dienstbare activa;Afschrijvingen
+630501;Afschrijvingen inrichting gehuurde gebouwen;Afschrijvingen
+630800;Waardeverminderingen op immateriële vaste activa;Overige bedrijfskosten
+630900;Waardeverminderingen op materiële vaste activa;Overige bedrijfskosten
+631000;Waardeverminderingen op voorraden;Overige bedrijfskosten
+633000;Waardeverminderingen op handelsvorderingen;Overige bedrijfskosten
+635000;Voorzieningen voor pensioenen;Overige bedrijfskosten
+636000;Voorzieningen voor grote onderhoudswerken;Overige bedrijfskosten
+640000;Bedrijfsbelastingen;Overige bedrijfskosten
+640200;Verkeersbelasting en BIV;Autokosten
+644000;Boetes;Overige bedrijfskosten
+646000;Diverse bedrijfskosten;Overige bedrijfskosten
+646001;Wettelijke bekendmakingen;Overige bedrijfskosten
+646002;Vennootschapsbijdrage;Overige bedrijfskosten
+646003;Oninbare vorderingen;Overige bedrijfskosten
+650000;Rente kaskrediet;Financiele kosten
+650100;Rente schulden aan verbonden onderneming {0};Financiele kosten
+650200;Rente lening van deelneming {0};Financiele kosten
+650300;Rente lening van {0};Financiele kosten
+650500;Interesten op voorschotten in RC;Financiele kosten
+650600;Overige betaalde rente;Financiele kosten
+650601;Rente vast voorschot;Financiele kosten
+651000;Geboekte waardevermindering op effecten;Financiele kosten
+652000;Gerealiseerde waardevermindering effecten;Financiele kosten
+653000;Discontokosten op vorderingen;Financiele kosten
+653500;Btw-correcties;Financiele kosten
+653600;Kasverschillen;Financiele kosten
+654000;Nadelige koersverschillen;Financiele kosten
+655000;Nadelige afrondingsverschillen;Financiele kosten
+656000;Voorzieningen met financieel karakter;Financiele kosten
+657000;Diverse financiële kosten;Financiele kosten
+657001;Commissies online betalingsproviders;Financiele kosten
+657002;Commissies online betalingsproviders (met BTW);Financiele kosten
+657003;Kosten Euretco;Financiele kosten
+657004;Kosten DZB / ANWR;Financiele kosten
+657005;Kosten GMS;Financiele kosten
+657006;Kosten KBC Commercial Finance;Financiele kosten
+657100;Bankkosten;Financiele kosten
+658000;Betalingsverschillen in uw nadeel;Financiele kosten
+658100;Korting voor contant;Financiele kosten
+659000;Diverse financiële kosten;Financiele kosten
+659001;Bankkosten zonder BTW;Financiele kosten
+660000;Uitzonderlijke kosten;Uitzonderlijke kosten
+661900;Herwaardering overige langlopende vorderingen;Uitzonderlijke kosten
+663000;Minderwaarden op de realisatie;Uitzonderlijke kosten
+664000;Andere niet-recurrente bedrijfskosten;Uitzonderlijke kosten
+670000;Belastingen op het resultaat;Belastingen op het resultaat
+670001;Belastingen op het resultaat vorig boekjaar;Belastingen op het resultaat van vorige boekjaren
+693000;Over te dragen winst;NIET IN P&L
+693100;Over te dragen resultaat;NIET IN P&L
+700000;Omzet;Omzet
+700001;Omzet - POS Trailer;Omzet
+708000;Toegekende kortingen en ristorno’s (-);Omzet
+708001;Toegekende kortingen en ristorno’s Trailer (-);Omzet
+713000;Wijzigingen voorraad gereed product;Omzet
+717000;Wijzigingen voorraad bestellingen in uitvoering;Omzet
+741000;Diverse bedrijfsopbrengsten;Andere bedrijfsopbrengsten
+741001;Diverse bedrijfsopbrengsten - verzendkosten;Andere bedrijfsopbrengsten
+741902;Doorgerekende kosten;Doorrekeningen
+743000;Recuperatie van personeelskosten;Bezoldigingen, RSZ & Pensioenen
+743001;Bijdrage WN maaltijdcheque;Bezoldigingen, RSZ & Pensioenen
+744000;Huuropbrengsten;Andere bedrijfsopbrengsten
+745000;Voordelen van alle aard;Andere bedrijfsopbrengsten
+746000;Recuperatie van kosten bij derden;Andere bedrijfsopbrengsten
+748000;Verkoop van vaste activa;Andere bedrijfsopbrengsten
+749000;Overige bedrijfsopbrengsten;Andere bedrijfsopbrengsten
+750100;Rente vordering op verbonden onderneming {0};Financiele opbrengsten
+750200;Rente lening aan deelneming {0};Financiele opbrengsten
+750300;Rente lening aan {0};Financiele opbrengsten
+751000;Rente van banken;Financiele opbrengsten
+751100;Overige opbrengsten uit vlottende activa;Financiele opbrengsten
+752000;Meerwaarden realisatie effecten;Financiele opbrengsten
+752500;Geboekte waardevermeerdering effecten;Financiele opbrengsten
+754000;Voordelige koersverschillen;Financiele opbrengsten
+758000;Betalingsverschillen in uw voordeel;Financiele opbrengsten
+758100;Ontvangen korting voor contant;Financiele opbrengsten
+763000;Meerwaarden op de realisatie;Uitzonderlijke opbrengsten
+793000;Over te dragen verlies;NIET IN P&L

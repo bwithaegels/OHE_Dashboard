@@ -1,0 +1,413 @@
+/* stijl.css — opmaak voor beide pagina's, licht en donker.
+   Alle kleuren staan als variabele bovenaan; verder in het bestand
+   wordt nergens nog een kleurcode hardgeschreven. */
+
+:root,
+html[data-thema="licht"] {
+  --achtergrond:   #fafaf9;
+  --vlak:          #ffffff;
+  --vlak-rustig:   #f7f6f3;
+  --vlak-nadruk:   #eeece7;
+  --rand:          #eceae5;
+  --rand-sterk:    #dedcd6;
+  --tekst:         #1c1c1a;
+  --tekst-zacht:   #78766f;
+  --tekst-flauw:   #c3c1ba;
+  --accent:        #1f3864;
+  --accent-tekst:  #ffffff;
+  --negatief:      #c62a2a;
+  --positief:      #18794e;
+  --reeks-op:      #2a78d6;
+  --reeks-kost:    #eb6834;
+  --waarschuwing-vlak: #fff4e5;
+  --waarschuwing-rand: #f5dcb8;
+  --fout-vlak:     #fdecec;
+  --fout-rand:     #f3c4c4;
+  --raster:        rgba(120,118,111,.15);
+  --schaduw:       0 1px 3px rgba(0,0,0,.08);
+  --meter-groen:   #2f9e63;
+  --meter-oranje:  #e0a33a;
+  --meter-rood:    #cf4b4b;
+}
+
+html[data-thema="donker"] {
+  --achtergrond:   #141416;
+  --vlak:          #1d1d20;
+  --vlak-rustig:   #26262a;
+  --vlak-nadruk:   #2e2e33;
+  --rand:          #2c2c31;
+  --rand-sterk:    #3a3a40;
+  --tekst:         #e9e7e2;
+  --tekst-zacht:   #9a978f;
+  --tekst-flauw:   #5c5a56;
+  --accent:        #6f9be0;
+  --accent-tekst:  #10131a;
+  --negatief:      #f08585;
+  --positief:      #5cc192;
+  --reeks-op:      #5b9ce6;
+  --reeks-kost:    #f0885c;
+  --waarschuwing-vlak: #2e2617;
+  --waarschuwing-rand: #4d3f22;
+  --fout-vlak:     #2f1b1b;
+  --fout-rand:     #4d2a2a;
+  --raster:        rgba(233,231,226,.12);
+  --schaduw:       0 1px 3px rgba(0,0,0,.4);
+  --meter-groen:   #47b57a;
+  --meter-oranje:  #e5b055;
+  --meter-rood:    #e06a6a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font: 15px/1.5 system-ui, -apple-system, sans-serif;
+  margin: 0;
+  background: var(--achtergrond);
+  color: var(--tekst);
+}
+
+.wrap { max-width: 900px; margin: 0 auto; padding: 1.2rem 1rem 3rem; }
+.wrap.breed { max-width: 1400px; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; margin-bottom: 1.1rem; flex-wrap: wrap;
+}
+h1 { font-size: 17px; margin: 0; font-weight: 600; }
+.sub { font-size: 12.5px; color: var(--tekst-zacht); margin: 2px 0 0; }
+
+.knoppen { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+a.btn, button.btn {
+  font: inherit; font-size: 13.5px; padding: .45rem .8rem; border-radius: 8px;
+  border: 1px solid var(--rand-sterk); background: var(--vlak); color: var(--tekst);
+  text-decoration: none; cursor: pointer; white-space: nowrap;
+}
+a.btn.prim, button.btn.prim {
+  background: var(--accent); color: var(--accent-tekst); border-color: var(--accent);
+}
+button.btn.icoon { padding: .45rem .6rem; min-width: 34px; }
+
+/* ---------------------------------------------------------- dashboard --- */
+
+.kaarten {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: .8rem; margin-bottom: 1.4rem;
+}
+.kaart {
+  background: var(--vlak); border: 1px solid var(--rand);
+  border-radius: 12px; padding: 1rem;
+}
+.kaart p { margin: 0; }
+.kaart .lbl { font-size: 12.5px; color: var(--tekst-zacht); margin-bottom: .3rem; }
+.kaart .val { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+.kaart .nb  { font-size: 12px; color: var(--tekst-zacht); margin-top: .2rem; }
+.neg { color: var(--negatief); }
+
+.paneel {
+  background: var(--vlak); border: 1px solid var(--rand);
+  border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1.2rem;
+}
+.legenda { display: flex; gap: 1.1rem; font-size: 12.5px; color: var(--tekst-zacht); margin-bottom: .6rem; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+.waarschuwing {
+  background: var(--waarschuwing-vlak); border: 1px solid var(--waarschuwing-rand);
+  border-radius: 10px; padding: .8rem 1rem; margin-bottom: 1.2rem; font-size: 14px;
+}
+.waarschuwing ul { margin: .5rem 0 0; padding-left: 1.1rem; }
+.fout {
+  background: var(--fout-vlak); border: 1px solid var(--fout-rand);
+  border-radius: 10px; padding: .9rem 1rem; margin-bottom: 1rem;
+}
+footer { font-size: 12px; color: var(--tekst-zacht); margin-top: 1.5rem; }
+
+/* --------------------------------------------------------------- P&L --- */
+
+.tabelbox {
+  background: var(--vlak); border: 1px solid var(--rand);
+  border-radius: 12px; overflow: auto; max-height: 78vh;
+}
+table { border-collapse: separate; border-spacing: 0; font-size: 13px; white-space: nowrap; min-width: 100%; }
+th, td { padding: .42rem .7rem; text-align: right; border-bottom: 1px solid var(--rand); }
+th:first-child, td:first-child {
+  text-align: left; position: sticky; left: 0; background: var(--vlak); z-index: 2;
+  min-width: 230px; border-right: 1px solid var(--rand);
+}
+thead th {
+  position: sticky; top: 0; background: var(--vlak); z-index: 3;
+  font-weight: 600; color: var(--tekst-zacht); border-bottom: 1px solid var(--rand-sterk);
+}
+thead th:first-child { z-index: 4; }
+thead tr.jaren th { color: var(--accent); font-size: 12px; letter-spacing: .03em; text-transform: uppercase; }
+
+tr.calc td { font-weight: 600; background: var(--vlak-rustig); border-top: 1px solid var(--rand-sterk); }
+tr.calc td:first-child { background: var(--vlak-rustig); }
+tr.pct td { font-style: italic; color: var(--tekst-zacht); background: var(--vlak-rustig); }
+tr.pct td:first-child { background: var(--vlak-rustig); }
+td.tot { font-weight: 600; background: var(--vlak-rustig); }
+tr.calc td.tot { background: var(--vlak-nadruk); }
+td.neg { color: var(--negatief); }
+.nul { color: var(--tekst-flauw); }
+
+.melding { font-size: 12.5px; color: var(--tekst-zacht); margin-top: .7rem; }
+#kopiemelding { color: var(--positief); font-weight: 600; }
+
+/* ------------------------------------------------------------ inloggen --- */
+
+body.inlog { display: flex; min-height: 90vh; align-items: center; justify-content: center; padding: 1rem; }
+body.inlog form {
+  background: var(--vlak); padding: 2rem; border-radius: 14px;
+  box-shadow: var(--schaduw); width: 100%; max-width: 320px;
+}
+body.inlog h1 { font-size: 16px; margin: 0 0 1.2rem; }
+body.inlog input {
+  width: 100%; padding: .6rem .7rem; font-size: 15px; border: 1px solid var(--rand-sterk);
+  border-radius: 8px; background: var(--achtergrond); color: var(--tekst);
+}
+body.inlog button {
+  width: 100%; margin-top: .8rem; padding: .6rem; font-size: 15px; border: 0;
+  border-radius: 8px; background: var(--accent); color: var(--accent-tekst); cursor: pointer;
+}
+body.inlog .fout { color: var(--negatief); font-size: 13px; margin-top: .6rem;
+  background: none; border: 0; padding: 0; }
+
+@media (max-width: 520px) {
+  .kaart .val { font-size: 19px; }
+}
+
+/* --------------------------------------------------- uitklapbare P&L --- */
+
+tr.klapbaar { cursor: pointer; }
+tr.klapbaar:hover td { background: var(--vlak-nadruk); }
+tr.klapbaar:hover td:first-child { background: var(--vlak-nadruk); }
+
+.caret {
+  display: inline-block; width: 1em; color: var(--tekst-zacht);
+  font-size: 11px; vertical-align: 1px;
+}
+.aantal {
+  display: inline-block; margin-left: .45rem; padding: 0 .38rem;
+  font-size: 10.5px; line-height: 1.45; border-radius: 7px;
+  background: var(--vlak-nadruk); color: var(--tekst-zacht);
+}
+tr.detail td { font-size: 12.5px; color: var(--tekst-zacht); }
+tr.detail td:first-child { padding-left: 2.1rem; }
+tr.detail .code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11.5px; color: var(--tekst-flauw); margin-right: .35rem;
+}
+
+/* Keuzelijst in de knoppenbalk moet op een knop lijken. */
+select.btn { appearance: none; padding-right: 1.6rem;
+  background-image: linear-gradient(45deg, transparent 50%, var(--tekst-zacht) 50%),
+                    linear-gradient(135deg, var(--tekst-zacht) 50%, transparent 50%);
+  background-position: calc(100% - 13px) 52%, calc(100% - 8px) 52%;
+  background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+}
+
+/* ------------------------------------------------ boekingen per cel --- */
+
+td.boekbaar { cursor: pointer; text-decoration: underline dotted var(--tekst-flauw); }
+td.boekbaar:hover { background: var(--vlak-nadruk); }
+
+tr.boekingen td { background: var(--vlak-rustig); padding: 0; white-space: normal; }
+tr.boekingen td:first-child { position: static; }
+.bk { padding: .9rem 1.1rem; }
+.bk-kop { font-size: 12.5px; color: var(--tekst-zacht); margin-bottom: .6rem; }
+.bk-laden, .bk-leeg { padding: .9rem 1.1rem; font-size: 13px; color: var(--tekst-zacht); }
+.bk-fout { padding: .9rem 1.1rem; font-size: 13px; color: var(--negatief); }
+.bk-tabel { font-size: 12.5px; width: auto; min-width: 0; }
+.bk-tabel th { position: static; background: none; text-align: left; font-weight: 600;
+  border-bottom: 1px solid var(--rand-sterk); }
+.bk-tabel th:nth-child(2), .bk-tabel th:nth-child(3),
+.bk-tabel td:nth-child(2), .bk-tabel td:nth-child(3) { text-align: right; }
+.bk-tabel td { position: static; background: none; min-width: 0; border-bottom: 1px solid var(--rand); }
+.bk-tabel td:first-child { position: static; padding-left: 0; max-width: 460px;
+  overflow: hidden; text-overflow: ellipsis; }
+.bk-rest td { font-style: italic; color: var(--tekst-zacht); }
+.bk-los { margin-top: .7rem; font-size: 12.5px; }
+.bk-los summary { cursor: pointer; color: var(--tekst-zacht); }
+
+
+/* ------------------------------------------------------- werkbalk P&L --- */
+
+.werkbalk {
+  display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
+  margin-bottom: .8rem;
+}
+.werkbalk .spacer { flex: 1 1 auto; }
+.werkbalk input[type="search"] {
+  font: inherit; font-size: 13.5px; padding: .45rem .7rem; min-width: 220px;
+  border: 1px solid var(--rand-sterk); border-radius: 8px;
+  background: var(--vlak); color: var(--tekst);
+}
+
+/* --------------------------------------------------- Tabulator, thema --- */
+/* De basis-CSS van Tabulator gaat uit van een lichte achtergrond met vaste
+   kleuren. Hier zetten we alles om naar de variabelen, zodat donkere modus
+   ook werkt. */
+
+.tabulator {
+  background: var(--vlak); border: 1px solid var(--rand); border-radius: 12px;
+  font-size: 13px; color: var(--tekst);
+}
+.tabulator .tabulator-header {
+  background: var(--vlak); border-bottom: 1px solid var(--rand-sterk);
+  color: var(--tekst-zacht);
+}
+.tabulator .tabulator-header .tabulator-col {
+  background: var(--vlak); border-right: 1px solid var(--rand);
+}
+.tabulator .tabulator-header .tabulator-col.tabulator-col-group .tabulator-col-group-cols {
+  border-top: 1px solid var(--rand);
+}
+.tabulator .tabulator-header .tabulator-col-title { font-weight: 600; }
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable:hover { background: var(--vlak-rustig); }
+
+.tabulator-row { background: var(--vlak); border-bottom: 1px solid var(--rand); }
+.tabulator-row.tabulator-row-even { background: var(--vlak); }
+.tabulator-row:hover { background: var(--vlak-rustig) !important; }
+.tabulator-row .tabulator-cell { border-right: 1px solid transparent; padding: .42rem .7rem; }
+.tabulator-row .tabulator-frozen { background: inherit; border-right: 1px solid var(--rand); }
+
+.tabulator-row.rij-calc { background: var(--vlak-rustig); font-weight: 600; }
+.tabulator-row.rij-calc .tabulator-cell { border-top: 1px solid var(--rand-sterk); }
+.tabulator-row.rij-pct  { background: var(--vlak-rustig); font-style: italic; color: var(--tekst-zacht); }
+.tabulator-row.rij-detail { font-size: 12.5px; color: var(--tekst-zacht); }
+
+.tabulator .tabulator-cell.neg { color: var(--negatief); }
+.tabulator .tabulator-cell.nul { color: var(--tekst-flauw); }
+.tabulator .tabulator-cell.kolom-totaal { font-weight: 600; background: var(--vlak-rustig); }
+
+.tabulator-row.rij-detail .tabulator-cell:not(.tabulator-frozen):not(:empty) { cursor: pointer; }
+.tabulator-row.rij-detail .tabulator-cell:not(.tabulator-frozen):hover {
+  background: var(--vlak-nadruk); border-radius: 4px;
+}
+
+.tabulator .tabulator-tableholder { background: var(--vlak); }
+.tabulator .tabulator-tableholder:focus { outline: none; }
+.tabulator-menu {
+  background: var(--vlak); border: 1px solid var(--rand-sterk); border-radius: 8px;
+  box-shadow: var(--schaduw); color: var(--tekst); font-size: 13px;
+}
+.tabulator-menu .tabulator-menu-item:hover { background: var(--vlak-rustig); }
+.tabulator .tabulator-header .tabulator-col .tabulator-header-popup-button:hover { color: var(--accent); }
+.kolomvink { white-space: nowrap; }
+
+.tabulator-row .tabulator-cell .tabulator-data-tree-control {
+  border-color: var(--tekst-zacht);
+}
+.tabulator-row .tabulator-cell .tabulator-data-tree-control:hover {
+  background: var(--vlak-nadruk); border-color: var(--accent);
+}
+.tabulator-row .tabulator-cell .tabulator-data-tree-control .tabulator-data-tree-control-collapse,
+.tabulator-row .tabulator-cell .tabulator-data-tree-control .tabulator-data-tree-control-expand {
+  background: var(--tekst-zacht);
+}
+.tabulator-row .tabulator-cell .tabulator-data-tree-control .tabulator-data-tree-control-collapse::after,
+.tabulator-row .tabulator-cell .tabulator-data-tree-control .tabulator-data-tree-control-expand::after {
+  background: var(--tekst-zacht);
+}
+
+#boekingen:not(:empty) {
+  margin-top: 1rem; background: var(--vlak); border: 1px solid var(--rand); border-radius: 12px;
+}
+.bk-sluit {
+  float: right; font: inherit; font-size: 12px; background: none; border: 0;
+  color: var(--tekst-zacht); cursor: pointer; text-decoration: underline;
+}
+
+
+/* --------------------------------------------------------- betaalmeter --- */
+
+.meterpaneel { display: flex; gap: 1.6rem; align-items: center; flex-wrap: wrap; }
+.meterkant { flex: 0 0 240px; }
+.meterkant .lbl { font-size: 12.5px; color: var(--tekst-zacht); margin: 0 0 .2rem; }
+.kaart-meter { grid-column: span 1; }
+.kaart-meter svg { margin: .2rem 0 .1rem; }
+.kaart-meter .nb a { color: var(--accent); text-decoration: none; white-space: nowrap; }
+.kaart-meter .nb a:hover { text-decoration: underline; }
+.metertekst { flex: 1 1 260px; font-size: 14px; }
+.metertekst p { margin: 0 0 .6rem; }
+.metertekst ul { margin: 0 0 .6rem; padding-left: 1.1rem; }
+.metertekst li { margin-bottom: .15rem; }
+.metertekst .nb { font-size: 12px; color: var(--tekst-zacht); }
+
+/* --------------------------------------------------- ouderdom klanten --- */
+
+.tabulator .tabulator-cell.laat-1 { color: var(--meter-oranje); }
+.tabulator .tabulator-cell.laat-2 { color: var(--meter-rood); }
+.tabulator .tabulator-cell.laat-3 { color: var(--meter-rood); font-weight: 600; }
+
+.uitleg { margin: -.6rem 0 1.2rem; max-width: 70ch; line-height: 1.5; }
+.uitleg strong { color: var(--tekst); }
+
+.groepmerk {
+  display: inline-block; padding: 0 .38rem; margin-right: .3rem;
+  font-size: 10.5px; line-height: 1.5; border-radius: 6px;
+  background: var(--vlak-nadruk); color: var(--tekst-zacht);
+}
+
+/* laat-1/2/3 bestonden alleen binnen Tabulator-cellen; klant.php gebruikt
+   dezelfde klassen op gewone <span>'s, dus hier ook los beschikbaar maken. */
+.laat-1 { color: var(--meter-oranje); }
+.laat-2 { color: var(--meter-rood); }
+.laat-3 { color: var(--meter-rood); font-weight: 600; }
+
+/* .nb was tot nu toe altijd binnen een oudercontext gestyled (.kaart .nb,
+   .metertekst .nb, ...). klant.php gebruikt het ook los, dus een algemene
+   basisregel; de specifiekere regels hierboven blijven gewoon voorrang
+   houden waar ze al golden. */
+.nb { font-size: 12px; color: var(--tekst-zacht); }
+
+/* ------------------------------------------------------ klantbetalingen --- */
+/* klant.php: uitklapbare lijst van bankbetalingen met de (best-effort)
+   gekoppelde facturen eronder. Geen Tabulator hier — een reeks losse
+   <details> is eenvoudiger en robuuster voor dit soort master/detail. */
+
+.betalingen { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.4rem; }
+
+.betaling {
+  background: var(--vlak); border: 1px solid var(--rand); border-radius: 10px;
+  overflow: hidden;
+}
+.betaling > summary {
+  display: flex; align-items: center; gap: .8rem; padding: .7rem .9rem;
+  cursor: pointer; list-style: none; font-size: 13.5px;
+}
+.betaling > summary::-webkit-details-marker { display: none; }
+.betaling > summary::before {
+  content: '▸'; display: inline-block; width: 1em; flex: 0 0 auto;
+  color: var(--tekst-zacht); font-size: 11px; transition: transform .12s ease;
+}
+.betaling[open] > summary::before { transform: rotate(90deg); }
+.betaling > summary:hover { background: var(--vlak-rustig); }
+.betaling[open] > summary { border-bottom: 1px solid var(--rand); }
+
+.betaling .datum { flex: 0 0 88px; color: var(--tekst-zacht); }
+.betaling .bedrag {
+  flex: 0 0 100px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums;
+}
+.betaling .oms {
+  flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; color: var(--tekst-zacht);
+}
+.betaling .aantal { flex: 0 0 auto; }
+
+.betaling-detail { padding: 0 .9rem 1rem; }
+.betaling-detail .oms-vol {
+  font-size: 12.5px; color: var(--tekst-zacht); background: var(--vlak-rustig);
+  border-radius: 8px; padding: .6rem .7rem; margin: .6rem 0 .8rem; word-break: break-word;
+}
+
+/* Kleine tabellen buiten de P&L (facturen bij een betaling, openstaande
+   facturen zonder koppeling). De algemene table-regels hierboven zijn
+   getekend voor het brede, horizontaal scrollende P&L-raster (sticky
+   eerste kolom, sticky header) — dat moet hier expliciet uit, anders
+   blijft een kopregel los boven de pagina "zweven" bij het scrollen. */
+.tabel-eenvoudig { width: 100%; min-width: 0; white-space: normal; font-size: 12.5px; }
+.tabel-eenvoudig th, .tabel-eenvoudig td { text-align: left; }
+.tabel-eenvoudig thead th { position: static; background: none; }
+.tabel-eenvoudig th:first-child, .tabel-eenvoudig td:first-child {
+  position: static; min-width: 0; background: none; border-right: 0; padding-left: .7rem;
+}
