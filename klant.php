@@ -74,6 +74,8 @@ $naam = $naamUitUrl;
 $koppeling = null;
 $eigenPosten = [];
 $totaalOpenstaand = 0.0;
+$vervallenBedrag = 0.0;
+$vervallenAantal = 0;
 $oudsteOpenDagen = null;
 
 try {
@@ -91,6 +93,17 @@ try {
 
     foreach ($eigenPosten as $p) {
         $totaalOpenstaand += (float) $p['bedrag'];
+        // Vervallen = de vervaldatum is bereikt, vandaag meegerekend, dus
+        // te_laat >= 0 (0 = vervalt vandaag). Let op: klanten.php's kolom
+        // "Waarvan te laat" en de meter daar tellen alleen > 0, zodat een
+        // factuur die vandaag vervalt daar nog niet meetelt en hier wel —
+        // bewust, op verzoek. De optelling zelf is wél dezelfde: het bedrag
+        // telt mee zoals Yuki het rapporteert, dus een vervallen creditnota
+        // verlaagt het bedrag.
+        if ($p['te_laat'] !== null && $p['te_laat'] >= 0) {
+            $vervallenBedrag += (float) $p['bedrag'];
+            $vervallenAantal++;
+        }
         if ($p['te_laat'] !== null && (int) $p['bedrag'] > 0) {
             $oudsteOpenDagen = max($oudsteOpenDagen ?? PHP_INT_MIN, (int) $p['te_laat']);
         }
@@ -103,6 +116,12 @@ try {
 }
 
 if ($naam === '') $naam = '(klant zonder naam)';
+
+// Aandeel vervallen in het totaal. Alleen zinvol bij een positief totaal:
+// bij een nul- of creditsaldo levert de deling een misleidend percentage op.
+$vervallenPct = $totaalOpenstaand > 0.005
+    ? round($vervallenBedrag / $totaalOpenstaand * 100, 1)
+    : null;
 
 /** Kleurklasse voor dagen te laat, zelfde drempels als klanten.php's dagenOpmaak(). */
 function klant_laat_klasse(?int $dagen): string
@@ -152,6 +171,18 @@ function klant_laat_klasse(?int $dagen): string
     <p class="lbl">Nu openstaand</p>
     <p class="val <?= $totaalOpenstaand < 0 ? 'neg' : '' ?>">€ <?= euro($totaalOpenstaand, true) ?></p>
     <p class="nb"><?= count($eigenPosten) ?> openstaande factu(u)r(en)</p>
+    <?php if ($eigenPosten): ?>
+    <p class="nb">
+      <?php if ($vervallenAantal > 0): ?>
+        Waarvan vervallen:
+        <strong class="<?= $vervallenBedrag > 0 ? 'neg' : '' ?>">€ <?= euro($vervallenBedrag, true) ?></strong><?php
+          if ($vervallenPct !== null): ?> (<?= h(number_format($vervallenPct, 1, ',', '.')) ?>%)<?php endif; ?>
+        — <?= h((string) $vervallenAantal) ?> factu(u)r(en)
+      <?php else: ?>
+        Niets vervallen.
+      <?php endif; ?>
+    </p>
+    <?php endif; ?>
   </div>
   <div class="kaart">
     <p class="lbl">Langst openstaand</p>
