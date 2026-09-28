@@ -106,9 +106,27 @@ a.btn.rij:hover, button.btn.rij:hover {
 }
 .kaart p { margin: 0; }
 .kaart .lbl { font-size: 12.5px; color: var(--tekst-zacht); margin-bottom: .3rem; }
-.kaart .val { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+.kaart .val { font-size: 22px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
 .kaart .nb  { font-size: 12px; color: var(--tekst-zacht); margin-top: .2rem; }
 .neg { color: var(--negatief); }
+.pos { color: var(--positief); }
+
+/* Ratioblok onder de KPI-kaarten. Hergebruikt .kaarten/.kaart volledig; alleen
+   de kop en de toelichting eronder hebben eigen regels nodig. */
+.ratiokop {
+  font-size: 15px; font-weight: 600; margin: .2rem 0 .7rem;
+  padding-top: .9rem; border-top: 1px solid var(--rand);
+}
+.ratio-uitleg { margin: -.6rem 0 1.4rem; font-size: 13px; color: var(--tekst-zacht); }
+.ratio-uitleg > summary { cursor: pointer; color: var(--tekst-zacht); }
+.ratio-uitleg > summary:hover { color: var(--tekst); }
+.ratio-uitleg p { margin: .6rem 0; max-width: 80ch; line-height: 1.5; }
+.ratio-uitleg strong { color: var(--tekst); }
+.ratio-uitleg ul { margin: .3rem 0 .6rem; padding-left: 1.1rem; }
+.ratio-uitleg code {
+  background: var(--vlak-rustig); border: 1px solid var(--rand);
+  border-radius: 4px; padding: 0 .25em; font-size: 12px;
+}
 
 .paneel {
   background: var(--vlak); border: 1px solid var(--rand);

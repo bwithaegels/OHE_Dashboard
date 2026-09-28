@@ -47,6 +47,43 @@ if ($pnl) {
     $k = kerncijfers($pnl, $mut['standen'], $van, $tot, $CFG);
 }
 
+// Vorig boekjaar kost twaalf extra maandeinden en wordt daarom alleen op
+// verzoek geladen — zelfde afspraak als in de resultatenrekening. Eenmaal
+// opgehaald zijn die maanden ouder dan 100 dagen, dus houdt de cache ze een
+// week vast en is een volgende klik gratis.
+$toonVorig = isset($_GET['vorigjaar']);
+$pnlVorig = null;
+$foutVorig = '';
+if ($toonVorig && $pnl) {
+    try {
+        $pnlVorig = bouw_pnl($y->maandmutaties($jaar - 1, $forceer), lees_mapping());
+    } catch (Throwable $e) {
+        $foutVorig = $e->getMessage();
+    }
+}
+
+$r = $k ? ratios($k, $pnl, $mut['standen'], $van, $tot, $CFG, $pnlVorig) : null;
+
+/** Houdt de huidige keuzes vast in elke link op deze pagina. */
+function url_met(array $extra = []): string
+{
+    $p = array_merge(array_intersect_key($_GET, array_flip(['periode', 'vorigjaar'])), $extra);
+    $p = array_filter($p, fn($v) => $v !== null);
+    return '?' . http_build_query($p);
+}
+
+/** Verhouding als "1,8×"; null wordt een streepje. */
+function maal(?float $v): string
+{
+    return $v === null ? '—' : number_format($v, 1, ',', '.') . '×';
+}
+
+/** Aantal dagen, afgerond; null wordt een streepje. */
+function dagen_tekst(?float $v): string
+{
+    return $v === null ? '—' : number_format($v, 0, ',', '.') . ' d';
+}
+
 // Grafiek: altijd het hele jaar, maar de gekozen maanden vol en de rest gedempt.
 $labels = $opbrengsten = $kosten = $margeReeks = $inBereik = [];
 if ($pnl) {
@@ -91,6 +128,7 @@ if ($k && $splits && $k['omzet'] > 0.005 && $k['dagen'] > 0) {
   <div class="knoppen">
     <?php if ($opties): ?>
     <form method="get" style="display:inline">
+      <?php if ($toonVorig): ?><input type="hidden" name="vorigjaar" value="1"><?php endif; ?>
       <select name="periode" class="btn" onchange="this.form.submit()">
         <?php foreach ($opties as $w => $l): ?>
           <option value="<?= h($w) ?>"<?= $w === $keuze ? ' selected' : '' ?>><?= h($l) ?></option>
@@ -100,7 +138,7 @@ if ($k && $splits && $k['omzet'] > 0.005 && $k['dagen'] > 0) {
     <?php endif; ?>
     <a class="btn" href="pnl.php">Resultatenrekening</a>
     <a class="btn" href="klanten.php">Klanten</a>
-    <a class="btn prim" href="?ververs=1&amp;periode=<?= h($keuze) ?>">Ververs</a>
+    <a class="btn prim" href="<?= h(url_met(['ververs' => 1, 'periode' => $keuze])) ?>">Ververs</a>
     <?php themaknop(); ?>
     <a class="btn" href="?uitloggen=1">Afmelden</a>
   </div>
@@ -195,6 +233,170 @@ if ($k && $splits && $k['omzet'] > 0.005 && $k['dagen'] > 0) {
 </p>
 <?php endif; ?>
 
+<?php if ($r): ?>
+<h2 class="ratiokop">Ratio's</h2>
+
+<?php if (!$r['balans']['sluit']): ?>
+  <div class="waarschuwing">
+    <strong>De proefbalans sluit niet.</strong>
+    De som van alle balansrekeningen wijkt € <?= euro(abs($r['balans']['verschil'])) ?> af van het
+    resultaat op de resultatenrekeningen. De balansratio's hieronder (current ratio, quick ratio,
+    solvabiliteit, werkkapitaal) staan daarom op een streepje: liever niets dan een kengetal dat
+    er goed uitziet en niet klopt. De rentabiliteitsratio's komen uit de resultatenrekening zelf
+    en zijn niet geraakt.
+  </div>
+<?php endif; ?>
+
+<div class="kaarten">
+  <div class="kaart">
+    <p class="lbl">Bedrijfsresultaat-marge</p>
+    <p class="val <?= ($r['ebit_pct'] ?? 0) < 0 ? 'neg' : '' ?>"><?= pct($r['ebit_pct']) ?></p>
+    <p class="nb">€ <?= euro($r['ebit']) ?> op € <?= euro($k['omzet']) ?> omzet</p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Nettomarge</p>
+    <p class="val <?= ($r['netto_pct'] ?? 0) < 0 ? 'neg' : '' ?>"><?= pct($r['netto_pct']) ?></p>
+    <p class="nb">resultaat van het boekjaar op de omzet</p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Kostenratio</p>
+    <p class="val"><?= pct($r['kosten_ratio']) ?></p>
+    <p class="nb">kosten tegenover alle opbrengsten samen</p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Personeelskosten</p>
+    <p class="val"><?= pct($r['lonen_pct']) ?></p>
+    <p class="nb">€ <?= euro($r['lonen']) ?> van de omzet<?php if ($r['management_pct'] !== null): ?>
+      · management en erelonen apart <?= pct($r['management_pct']) ?><?php endif; ?></p>
+  </div>
+
+  <div class="kaart">
+    <p class="lbl">Voorraaddagen (DIO)</p>
+    <p class="val"><?= dagen_tekst($r['dio']) ?></p>
+    <p class="nb">voorraad € <?= euro($r['balans']['voorraad']) ?> op aankopen € <?= euro($r['aankopen']) ?></p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Betaaltermijn leveranciers (DPO)</p>
+    <p class="val"><?= dagen_tekst($r['dpo']) ?></p>
+    <p class="nb">crediteuren € <?= euro($r['balans']['crediteuren']) ?> op inkopen € <?= euro($r['inkoop']) ?></p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Cashcyclus</p>
+    <p class="val <?= ($r['ccc'] !== null && $r['ccc'] <= 0) ? 'pos' : '' ?>"><?= dagen_tekst($r['ccc']) ?></p>
+    <p class="nb">voorraad + klanten − leveranciers; lager is beter</p>
+  </div>
+
+  <div class="kaart">
+    <p class="lbl">Current ratio</p>
+    <p class="val"><?= maal($r['balans']['sluit'] ? $r['current'] : null) ?></p>
+    <p class="nb">vlottende activa tegenover schulden op korte termijn</p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Quick ratio</p>
+    <p class="val"><?= maal($r['balans']['sluit'] ? $r['quick'] : null) ?></p>
+    <p class="nb">zelfde, maar zonder de voorraad mee te rekenen</p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Solvabiliteit</p>
+    <p class="val"><?= pct($r['balans']['sluit'] ? $r['solvabiliteit'] : null) ?></p>
+    <p class="nb">eigen vermogen op het balanstotaal</p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Werkkapitaal</p>
+    <p class="val <?= $r['werkkapitaal'] < 0 ? 'neg' : '' ?>">
+      <?= $r['balans']['sluit'] ? '€ ' . euro($r['werkkapitaal']) : '—' ?></p>
+    <p class="nb">vlottende activa min de korte schulden, stand eind <?= h(maandnaam($tot)) ?></p>
+  </div>
+
+  <div class="kaart">
+    <p class="lbl">Omzet op jaarbasis</p>
+    <p class="val">€ <?= euro($r['run_rate']) ?></p>
+    <p class="nb"><?= h((string) $r['maanden']) ?> maand(en) doorgerekend naar twaalf</p>
+  </div>
+  <?php if ($r['groei'] === null): ?>
+  <div class="kaart">
+    <p class="lbl">Groei tegenover <?= h((string) ($jaar - 1)) ?></p>
+    <p class="val">—</p>
+    <p class="nb">
+      <?php if ($foutVorig): ?>
+        Vorig jaar ophalen mislukt: <?= h($foutVorig) ?>
+      <?php else: ?>
+        <a href="<?= h(url_met(['vorigjaar' => 1, 'periode' => $keuze])) ?>">Vorig jaar laden →</a>
+        (twaalf extra Yuki-calls, daarna een week uit de cache)
+      <?php endif; ?>
+    </p>
+  </div>
+  <?php elseif (!$r['groei']['volledig']): ?>
+  <div class="kaart">
+    <p class="lbl">Groei tegenover <?= h((string) ($jaar - 1)) ?></p>
+    <p class="val">—</p>
+    <p class="nb">vorig boekjaar loopt niet tot <?= h(maandnaam($tot)) ?>, dus niet te vergelijken</p>
+  </div>
+  <?php else: ?>
+  <div class="kaart">
+    <p class="lbl">Omzetgroei tegenover <?= h((string) ($jaar - 1)) ?></p>
+    <p class="val <?= ($r['groei']['omzet_pct'] ?? 0) < 0 ? 'neg' : '' ?>"><?= pct($r['groei']['omzet_pct']) ?></p>
+    <p class="nb">€ <?= euro($k['omzet']) ?> nu tegenover € <?= euro($r['groei']['omzet']) ?> toen,
+      zelfde maanden</p>
+  </div>
+  <div class="kaart">
+    <p class="lbl">Brutomarge tegenover <?= h((string) ($jaar - 1)) ?></p>
+    <p class="val"><?= pct($k['marge_pct']) ?></p>
+    <p class="nb">was <?= pct($r['groei']['marge_pct_vorig']) ?><?php
+      if ($k['marge_pct'] !== null && $r['groei']['marge_pct_vorig'] !== null):
+        $vp = $k['marge_pct'] - $r['groei']['marge_pct_vorig']; ?>
+      · <?= h(($vp >= 0 ? '+' : '') . number_format($vp, 1, ',', '.')) ?> procentpunt<?php endif; ?></p>
+  </div>
+  <?php endif; ?>
+</div>
+
+<details class="ratio-uitleg">
+  <summary>Waar deze cijfers vandaan komen</summary>
+  <p>
+    Alles hierboven komt uit de resultatenrekening en de proefbalans die het dashboard toch al
+    ophaalt; alleen de vergelijking met vorig jaar kost extra Yuki-calls. Kosten staan in de hele
+    app negatief; voor een ratio worden ze één keer omgedraaid, in <code>ratios()</code>.
+  </p>
+  <p>
+    <strong>Klanten- en leveranciersposten worden op het teken ingedeeld, niet op het
+    rekeningnummer.</strong> Een 40-rekening met een creditsaldo — zoals de
+    Shopify-vooruitbetalingen — is een schuld en telt ook als schuld, want meetellen als vordering
+    zou de current ratio veel te hoog zetten.
+  </p>
+  <p>
+    <strong>DPO</strong> rekent met de ingekochte goederen én diensten
+    (€ <?= euro($r['inkoop']) ?> over deze periode): lonen, afschrijvingen, belastingen en
+    financiële lasten zitten er niet in, want die lopen niet via een leveranciersfactuur.
+    <strong>DIO</strong> rekent alleen met de aankopen handelsgoederen.
+  </p>
+  <p>Voorraadrekeningen in deze berekening
+    <?= $CFG['voorraad_rekeningen'] ?? null ? '(uit config.php)' : '(alles in klasse 3 — stel <code>voorraad_rekeningen</code> in config.php in om dit vast te leggen)' ?>:</p>
+  <ul>
+    <?php foreach ($r['balans']['gebruikt']['voorraad'] as $code => [$naam, $bedrag]): ?>
+      <li><?= h((string) $code) ?> <?= h($naam) ?> — € <?= euro($bedrag) ?></li>
+    <?php endforeach; ?>
+    <?php if (!$r['balans']['gebruikt']['voorraad']): ?><li>geen enkele met een saldo</li><?php endif; ?>
+  </ul>
+  <p>Crediteurenrekeningen
+    <?= $CFG['crediteuren_rekeningen'] ?? null ? '(uit config.php)' : '(alles in 44 — stel <code>crediteuren_rekeningen</code> in config.php in om dit vast te leggen)' ?>:</p>
+  <ul>
+    <?php foreach ($r['balans']['gebruikt']['crediteuren'] as $code => [$naam, $bedrag]): ?>
+      <li><?= h((string) $code) ?> <?= h($naam) ?> — € <?= euro($bedrag) ?></li>
+    <?php endforeach; ?>
+    <?php if (!$r['balans']['gebruikt']['crediteuren']): ?><li>geen enkele met een saldo</li><?php endif; ?>
+  </ul>
+  <p>
+    Balans eind <?= h(maandnaam($tot)) ?>: vast € <?= euro($r['balans']['vast']) ?> ·
+    voorraad € <?= euro($r['balans']['voorraad']) ?> ·
+    vorderingen € <?= euro($r['balans']['vorderingen']) ?> ·
+    liquide € <?= euro($r['balans']['liquide']) ?> ·
+    korte schulden € <?= euro($r['balans']['kort_vreemd']) ?> ·
+    eigen vermogen € <?= euro($r['balans']['eigen_vermogen']) ?>.
+    Controle: balansrekeningen minus resultatenrekeningen = € <?= euro($r['balans']['verschil']) ?>
+    (<?= $r['balans']['sluit'] ? 'sluit' : 'sluit niet' ?>).
+  </p>
+</details>
+<?php endif; ?>
 
 </div>
 

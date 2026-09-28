@@ -912,3 +912,206 @@ function splits_debiteuren(array $d, array $fragmenten): array
     }
     return $uit;
 }
+
+// ---------------------------------------------------------------- ratio's --
+
+/**
+ * Kostencategorieën die bij leveranciers ingekocht worden — de noemer van DPO.
+ * Lonen, afschrijvingen, belastingen en financiële lasten horen er niet in:
+ * die lopen niet via een leveranciersfactuur en zouden de DPO kunstmatig
+ * verlagen. Doorrekeningen ook niet, want dat is een gesaldeerde lijn.
+ */
+const RATIO_INKOOP_LIJNEN = [
+    'Aankopen handelsgoederen', 'Kosten gebouw', 'Kosten kantoor', 'Reiskosten',
+    'Kosten publiciteit', 'Autokosten', 'Transportkosten en Bleckmann',
+    'Overige diensten en diverse goederen', 'Managementvergoedingen en erelonen',
+    'Overige bedrijfskosten',
+];
+
+/**
+ * Deelt de balans (type B) van één maandeinde op in de blokken die de
+ * balansratio's nodig hebben.
+ *
+ * De indeling volgt het Belgisch rekeningstelsel op klasse, met één
+ * uitzondering die telt: binnen klasse 4 en 5 bepaalt het TEKEN of iets een
+ * vordering dan wel een schuld is, niet het rekeningnummer. 406001
+ * (Shopify-vooruitbetalingen, staat rond −2M) is precies waarom: dat is een
+ * 40-rekening met een creditsaldo, dus een schuld, en meetellen als vordering
+ * zou de current ratio ruim een derde te hoog zetten — dezelfde val als bij
+ * de debiteuren op het dashboard.
+ *
+ * Voorraad en crediteuren zijn wél expliciet instelbaar
+ * ('voorraad_rekeningen' / 'crediteuren_rekeningen' in config.php), net als
+ * debiteuren_rekeningen al is; zonder instelling wordt op klasse 3 en 44
+ * teruggevallen. Welke rekeningen er in werkelijkheid in zijn gaan zitten
+ * staat onder de kaarten, zodat het te controleren is in plaats van te
+ * geloven.
+ */
+function balansdelen(array $stand, array $cfg = []): array
+{
+    $voorraadRek = $cfg['voorraad_rekeningen']    ?? null;
+    $credRek     = $cfg['crediteuren_rekeningen'] ?? null;
+
+    $d = [
+        'vast' => 0.0, 'voorraad' => 0.0, 'vorderingen' => 0.0, 'liquide' => 0.0,
+        'kort_vreemd' => 0.0, 'crediteuren' => 0.0, 'eigen_vermogen' => 0.0,
+        'voorzieningen' => 0.0, 'lang_vreemd' => 0.0,
+        'som_b' => 0.0, 'som_w' => 0.0,
+        'gebruikt' => ['voorraad' => [], 'crediteuren' => []],
+    ];
+
+    foreach ($stand as $code => $r) {
+        $c = (string) $code;
+        $bedrag = (float) $r['bedrag'];
+
+        if (($r['type'] ?? '') === 'W') { $d['som_w'] += $bedrag; continue; }
+        if (($r['type'] ?? '') !== 'B') continue;
+        $d['som_b'] += $bedrag;
+
+        $isVoorraad = $voorraadRek !== null
+            ? in_array($c, (array) $voorraadRek, true)
+            : str_starts_with($c, '3');
+        $isCrediteur = $credRek !== null
+            ? in_array($c, (array) $credRek, true)
+            : str_starts_with($c, '44');
+
+        if ($isVoorraad) {
+            $d['voorraad'] += $bedrag;
+            if (abs($bedrag) > 0.005) $d['gebruikt']['voorraad'][$c] = [$r['naam'] ?? '', $bedrag];
+        }
+        if ($isCrediteur && $bedrag < 0) {
+            $d['crediteuren'] += -$bedrag;
+            if (abs($bedrag) > 0.005) $d['gebruikt']['crediteuren'][$c] = [$r['naam'] ?? '', -$bedrag];
+        }
+        if ($isVoorraad) continue;   // al geteld, niet nog eens via de klasse
+
+        $klasse = substr($c, 0, 1);
+        $twee   = (int) substr($c . '00', 0, 2);
+
+        if ($klasse === '1') {
+            if ($twee >= 10 && $twee <= 15)      $d['eigen_vermogen'] += -$bedrag;
+            elseif ($twee === 16)                $d['voorzieningen']  += -$bedrag;
+            else                                 $d['lang_vreemd']    += -$bedrag;
+        } elseif ($klasse === '2') {
+            // Geboekte afschrijvingen staan credit op een eigen 2-rekening en
+            // worden hier dus vanzelf van de aanschafwaarde afgetrokken.
+            $d['vast'] += $bedrag;
+        } elseif ($klasse === '3') {
+            $d['voorraad'] += $bedrag;
+        } elseif ($klasse === '4') {
+            if ($bedrag >= 0) $d['vorderingen'] += $bedrag;
+            else              $d['kort_vreemd']  += -$bedrag;
+        } elseif ($klasse === '5') {
+            if ($bedrag >= 0) $d['liquide']     += $bedrag;
+            else              $d['kort_vreemd'] += -$bedrag;   // bv. een negatief banksaldo
+        }
+    }
+
+    $d['vlottend'] = $d['voorraad'] + $d['vorderingen'] + $d['liquide'];
+    $d['activa']   = $d['vast'] + $d['vlottend'];
+
+    // Controle die niets met de mapping te maken heeft: in een sluitende
+    // proefbalans is de som van alle B-rekeningen gelijk aan de som van alle
+    // W-rekeningen (het resultaat van het boekjaar is nog niet naar het eigen
+    // vermogen geboekt). Wijkt dat af, dan klopt de indeling hierboven
+    // misschien wel maar de balans zelf niet — dan tonen we liever een
+    // waarschuwing dan een keurig ogend kengetal.
+    $d['verschil'] = $d['som_b'] - $d['som_w'];
+    $d['sluit']    = abs($d['verschil']) < max(1.0, abs($d['som_b']) * 0.001);
+
+    return $d;
+}
+
+/**
+ * Ratio's over de gekozen periode. Alles komt uit de P&L en de proefbalans
+ * die het dashboard toch al geladen heeft — geen extra Yuki-calls, behalve
+ * voor de groeicijfers, die het vorige boekjaar nodig hebben ($pnlVorig).
+ *
+ * Elk kengetal is null als het niet te berekenen valt (geen omzet, geen
+ * voorraad, nul in de noemer). Null betekent hier "onbekend" en wordt als een
+ * streepje getoond; een 0 of een 100% neerzetten omdat een deling niet kon,
+ * is hoe een dashboard gaat liegen.
+ */
+function ratios(array $k, array $pnl, array $standen, int $van, int $tot,
+                array $cfg = [], ?array $pnlVorig = null): array
+{
+    $som = function (array $bron, string $naam, int $v, int $t): float {
+        $x = 0.0;
+        for ($m = $v; $m <= $t; $m++) $x += $bron['rijen'][$naam][$m] ?? 0.0;
+        return $x;
+    };
+    $deel = fn(?float $teller, ?float $noemer): ?float =>
+        ($teller === null || $noemer === null || abs($noemer) < 0.005) ? null : $teller / $noemer;
+
+    $omzet     = (float) $k['omzet'];
+    $bedrijfs  = $som($pnl, 'Bedrijfsresultaat', $van, $tot);
+    $resultaat = (float) $k['resultaat'];
+    $maanden   = max(1, $tot - $van + 1);
+    $dagen     = (int) $k['dagen'];
+
+    // Kosten staan negatief in de huisconventie; voor een ratio willen we ze
+    // positief, dus één keer omdraaien, hier, en nergens anders meer.
+    $lonen      = -$som($pnl, 'Bezoldigingen, RSZ & Pensioenen', $van, $tot);
+    $management = -$som($pnl, 'Managementvergoedingen en erelonen', $van, $tot);
+    $aankopen   = -$som($pnl, 'Aankopen handelsgoederen', $van, $tot);
+    $inkoop     = 0.0;
+    foreach (RATIO_INKOOP_LIJNEN as $n) $inkoop += -$som($pnl, $n, $van, $tot);
+
+    $b = balansdelen($standen[$tot] ?? [], $cfg);
+
+    // Nul in de teller geeft hier geen "0 dagen" maar een streepje: een lege
+    // voorraad- of crediteurenpost betekent meestal dat die rekeningen anders
+    // genummerd zijn, niet dat er niets openstaat. Een hard 0 zou dat
+    // verschil onzichtbaar maken.
+    $dio = ($aankopen > 0.005 && $dagen > 0 && $b['voorraad']    > 0.005)
+        ? $deel($b['voorraad'], $aankopen) * $dagen : null;
+    $dpo = ($inkoop   > 0.005 && $dagen > 0 && $b['crediteuren'] > 0.005)
+        ? $deel($b['crediteuren'], $inkoop) * $dagen : null;
+    $dso = $k['dso'];
+    $ccc = ($dio !== null && $dpo !== null && $dso !== null) ? $dio + $dso - $dpo : null;
+
+    $groei = null;
+    if ($pnlVorig !== null) {
+        $totVorig = min($tot, (int) $pnlVorig['maanden']);
+        $volledig = $totVorig >= $tot;   // liep het vorige jaar al tot dezelfde maand?
+        $omzetV = $volledig ? $som($pnlVorig, 'Omzet', $van, $tot) : null;
+        $margeV = $volledig ? $som($pnlVorig, 'Bruto marge', $van, $tot) : null;
+        $resV   = $volledig ? $som($pnlVorig, 'Resultaat van het boekjaar', $van, $tot) : null;
+        $groei = [
+            'volledig'   => $volledig,
+            'omzet'      => $omzetV,
+            'omzet_pct'  => ($omzetV !== null && $omzetV > 0.005) ? ($omzet - $omzetV) / $omzetV * 100 : null,
+            'marge_pct_vorig' => ($margeV !== null) ? $deel($margeV, $omzetV) : null,
+            'resultaat'  => $resV,
+        ];
+        if ($groei['marge_pct_vorig'] !== null) $groei['marge_pct_vorig'] *= 100;
+    }
+
+    return [
+        // rentabiliteit
+        'ebit'          => $bedrijfs,
+        'ebit_pct'      => ($p = $deel($bedrijfs, $omzet))   === null ? null : $p * 100,
+        'netto_pct'     => ($p = $deel($resultaat, $omzet))  === null ? null : $p * 100,
+        'kosten_ratio'  => ($p = $deel((float) $k['kosten'], (float) $k['opbrengsten'])) === null ? null : $p * 100,
+        'lonen'         => $lonen,
+        'lonen_pct'     => ($p = $deel($lonen, $omzet))      === null ? null : $p * 100,
+        'management'    => $management,
+        'management_pct' => ($p = $deel($management, $omzet)) === null ? null : $p * 100,
+        // werkkapitaalcyclus
+        'dio'           => $dio,
+        'dpo'           => $dpo,
+        'ccc'           => $ccc,
+        'aankopen'      => $aankopen,
+        'inkoop'        => $inkoop,
+        // balans
+        'balans'        => $b,
+        'current'       => $deel($b['vlottend'], $b['kort_vreemd']),
+        'quick'         => $deel($b['vlottend'] - $b['voorraad'], $b['kort_vreemd']),
+        'solvabiliteit' => ($p = $deel($b['eigen_vermogen'], $b['activa'])) === null ? null : $p * 100,
+        'werkkapitaal'  => $b['vlottend'] - $b['kort_vreemd'],
+        // groei
+        'maanden'       => $maanden,
+        'run_rate'      => $maanden > 0 ? $omzet / $maanden * 12 : null,
+        'groei'         => $groei,
+    ];
+}
